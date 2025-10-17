@@ -13,3 +13,18 @@
  *= require_tree .
  *= require_self
  */
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 95vh;
+}
+
+.chatgpt-conversation {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.chat-input {
+    flex-shrink: 0;
+}
