@@ -1,7 +1,6 @@
 <div class="chat-container" data-controller="chat">
   <h1>ChatGPT</h1>
-  <section class="chatgpt-conversation" data-chat-target="conversation"></section>
-
+  <section class="chat-conversation" data-chat-target="conversation"></section>
   <%= form_with data: {action: "chat#generateResponse"} do |form| %>
     <div class="chat-input">
       <%= form.text_area :message, id: 'prompt', data: {chat_target: "prompt"} %>

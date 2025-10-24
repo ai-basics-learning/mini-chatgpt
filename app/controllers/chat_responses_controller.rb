@@ -5,23 +5,24 @@ class ChatResponsesController < ApplicationController
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Last-Modified'] = Time.now.httpdate
     sse = SSE.new(response.stream, event: 'message')
-    client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
+    client = OpenAI::Client.new(access_token: ENV.fetch("GROQ_API_KEY"),
+                                uri_base: "https://api.groq.com/openai/v1")
 
     begin
-      client.chat(parameters: {
-          model: 'gpt-3.5-turbo',
-          message: {role: 'user', content: params[:prompt]},
-          stream: proc do |chunk|
-            # content = chunk.dig ("choices", 0, 'delta', 'content')
-            content = chunk.dig("choices", 0, "delta", "content")
-            return if content.nil?
-            sse.write ({message: content})
-          end
-
-      })
+      client.chat(parameters: {model: "llama-3.1-8b-instant",
+                               messages: [{role: "system", content: "You are a helpful assistant."},
+                                          {role: "user", content: params[:prompt]}],
+                               temperature: 0.7,
+                               max_tokens: 256,
+                               stream: proc do |chunk|
+                                 content = chunk.dig("choices", 0, "delta", "content")
+                                 return if content.nil?
+                                 Rails.logger.info content
+                                 sse.write ({message: content})
+                               end})
+    rescue Faraday::BadRequestError => e
+      puts "Bad request!  Response body:\n#{e.response[:body]}" if e.respond_to?(:response)
     ensure
-      #Todo: Remove below line after adding credit
-      sse.write ({message: 'Unable to reach chatgpat due to credits..'})
 
       sse.close
     end
